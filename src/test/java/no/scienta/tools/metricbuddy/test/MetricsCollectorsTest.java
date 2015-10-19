@@ -132,7 +132,7 @@ public class MetricsCollectorsTest {
     public void testMetering() {
         mtm().testMetering(3);
 
-        assertMeterValue("test-meter", 1, 3.0);
+        assertMeterValue("test-metering", 3, 3.0);
     }
 
     @Test(expected = IllegalArgumentException.class)

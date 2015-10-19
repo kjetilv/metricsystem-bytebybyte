@@ -62,7 +62,8 @@ final class MetricsBuddy {
     private static final Collection<Class<? extends Annotation>> annotations = new HashSet<>(Arrays.asList(
             Inc.class,
             Histo.class,
-            Time.class));
+            Time.class,
+            Meter.class));
 
     private static Class<? extends MetricsCollector> loaded(DynamicType.Builder<MetricsCollector> baseBuilder) {
         return baseBuilder.make()
