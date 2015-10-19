@@ -14,16 +14,16 @@ public class AbstractSeparatorNamer implements MetricsCollectors.MetricNameStrat
 
     private final char separator;
 
-    protected AbstractSeparatorNamer(char c) {
-        separator = '-';
+    protected AbstractSeparatorNamer(char separator) {
+        this.separator = separator;
     }
 
     @Override
     public String metricName(Method method) {
-        return cache.computeIfAbsent(method.getName(), name -> casedName(name, '-'));
+        return cache.computeIfAbsent(method.getName(), this::casedName);
     }
 
-    private String casedName(String name, char separator) {
+    private String casedName(String name) {
         return name.chars()
                 .mapToObj(i -> (char) i)
                 .flatMap(c -> isUpperCase(c)

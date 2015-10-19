@@ -72,16 +72,16 @@ public class MetricsCollectorsTest {
     @Test
     public void testSimpleCounter() {
         mtm().testRun();
-        assertCounterValue("test-run", 1L);
+        assertCounterValue("test_run", 1L);
 
         mtm().testRun();
-        assertCounterValue("test-run", 2L);
+        assertCounterValue("test_run", 2L);
 
         mtm().testFailed();
-        assertCounterValue("test-failed", 1L);
+        assertCounterValue("test_failed", 1L);
         mtm().testFailed();
         mtm().testFailed();
-        assertCounterValue("test-failed", 3L);
+        assertCounterValue("test_failed", 3L);
     }
 
     @Test
@@ -93,16 +93,16 @@ public class MetricsCollectorsTest {
     @Test
     public void testStepCounter() {
         mtm().testSteps(10L);
-        assertCounterValue("test-steps", 10L);
+        assertCounterValue("test_steps", 10L);
     }
 
     @Test
     public void testHistogram() {
         mtm().testLength(10L);
-        assertHistogramValue("test-length", 1L, 10.0D);
+        assertHistogramValue("test_length", 1L, 10.0D);
 
         mtm().testLength(2L);
-        assertHistogramValue("test-length", 2L, 6.0D);
+        assertHistogramValue("test_length", 2L, 6.0D);
     }
 
     @Test
@@ -118,21 +118,21 @@ public class MetricsCollectorsTest {
         Thread.sleep(100);
         timer.done();
 
-        assertTimerValue("test-timer", 1, 99.0);
+        assertTimerValue("test_timer", 1, 99.0);
     }
 
     @Test
     public void testMeter() {
         mtm().testMeter();
 
-        assertMeterValue("test-meter", 1, 1.0);
+        assertMeterValue("test_meter", 1, 1.0);
     }
 
     @Test
     public void testMetering() {
         mtm().testMetering(3);
 
-        assertMeterValue("test-metering", 3, 3.0);
+        assertMeterValue("test_metering", 3, 3.0);
     }
 
     @Test(expected = IllegalArgumentException.class)
