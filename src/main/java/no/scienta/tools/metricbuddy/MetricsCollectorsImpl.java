@@ -57,7 +57,7 @@ public final class MetricsCollectorsImpl implements MetricsCollectors {
     }
 
     @Override
-    public MetricsCollectors withNamingStrategy(MetricNameStrategy strategy) {
+    public MetricsCollectors withNameStrategy(MetricNameStrategy strategy) {
         return new MetricsCollectorsImpl(metricRegistry, strategy, registeredInJmx);
     }
 

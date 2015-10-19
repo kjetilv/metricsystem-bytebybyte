@@ -39,21 +39,21 @@ public interface MetricsCollectors {
      * @return Metrics collectors with snake_case_naming.
      */
     default MetricsCollectors withSnakeCaseNaming() {
-        return withNamingStrategy(new SnakeCaseNamer());
+        return withNameStrategy(new SnakeCaseNamer());
     };
 
     /**
      * @return Metrics collectors with path.naming.
      */
     default MetricsCollectors withPathNaming() {
-        return withNamingStrategy(new PathNamer());
+        return withNameStrategy(new PathNamer());
     };
 
     /**
      * @param strategy Naming strategy
      * @return Metrics collectors with the given naming.
      */
-    MetricsCollectors withNamingStrategy(MetricNameStrategy strategy);
+    MetricsCollectors withNameStrategy(MetricNameStrategy strategy);
 
     /**
      * A timer interface.
