@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 import static java.lang.Character.isUpperCase;
 import static java.lang.Character.toLowerCase;
 
-public class AbstractSeparatorNamer implements MetricsBuddy.MetricNameStrategy {
+public class AbstractSeparatorNamer implements MetricsCollectors.MetricNameStrategy {
 
     private final Map<String, String> cache = new ConcurrentHashMap<>();
 

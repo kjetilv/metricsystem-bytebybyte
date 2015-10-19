@@ -19,7 +19,7 @@ final class MetricsBuddy {
 
     static Class<? extends MetricsCollector> generateSubclass(
             Class<?> type,
-            MetricNameStrategy metricNameStrategy) {
+            MetricsCollectors.MetricNameStrategy metricNameStrategy) {
         DynamicType.Builder<MetricsCollector> builder =
                 withAddedMethods(type, metricNameStrategy, basicBuilder(type));
         return loaded(builder);
@@ -31,7 +31,7 @@ final class MetricsBuddy {
 
     private static <T extends MetricsCollector> DynamicType.Builder<T> withAddedMethods(
             Class<?> type,
-            MetricNameStrategy metricNameStrategy,
+            MetricsCollectors.MetricNameStrategy metricNameStrategy,
             DynamicType.Builder<T> base) {
         return Stream.of(type.getDeclaredMethods()).reduce(base,
                 (builder, method) -> createMethod(builder, method, metricNameStrategy),
@@ -41,7 +41,7 @@ final class MetricsBuddy {
     private static <T extends MetricsCollector> DynamicType.Builder<T> createMethod(
             DynamicType.Builder<T> builder,
             Method method,
-            MetricNameStrategy metricNameStrategy) {
+            MetricsCollectors.MetricNameStrategy metricNameStrategy) {
         MethodCall baseCall = MethodCall.invoke(baseMethod(method)).onSuper();
         String name = metricName(metricNameStrategy, method);
         MethodCall argumentMethodCall = method.getParameterCount() == 0
@@ -56,7 +56,7 @@ final class MetricsBuddy {
         return IntStream.range(0, method.getParameterCount()).toArray();
     }
 
-    private static String metricName(MetricNameStrategy metricNameStrategy, Method method) {
+    private static String metricName(MetricsCollectors.MetricNameStrategy metricNameStrategy, Method method) {
         OverrideName overrideName = method.getAnnotation(OverrideName.class);
         return overrideName != null ? overrideName.value()
                 : metricNameStrategy != null ? metricNameStrategy.metricName(method)
@@ -131,11 +131,6 @@ final class MetricsBuddy {
             DynamicType.Builder<T> b1,
             DynamicType.Builder<T> b2) {
         throw new IllegalStateException("Should not get here: " + b1 + " + " + b2);
-    }
-
-    public interface MetricNameStrategy {
-
-        String metricName(Method metricMethod);
     }
 
     private MetricsBuddy() {

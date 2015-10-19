@@ -58,7 +58,7 @@ final class Validation {
 
     private static Void validateTimer(Method method) {
         if (method.getReturnType() != MetricsCollectors.Timer.class) {
-            throw new IllegalArgumentException("Timer method should return " + MetricsCollectors.Timer.class + ": " + method);
+            throw new IllegalArgumentException("Timer method should return " + MetricsCollectorsImpl.Timer.class + ": " + method);
         }
         if (method.getParameterCount() > 0) {
             throw new IllegalArgumentException("Timer method should take no parameters: " + method);

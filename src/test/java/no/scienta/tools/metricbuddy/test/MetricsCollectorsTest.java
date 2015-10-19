@@ -22,7 +22,7 @@ public class MetricsCollectorsTest {
     @Before
     public void setup() {
         registry = new MetricRegistry();
-        metricsCollectors = new MetricsCollectors(registry).withSnakeCaseNaming();
+        metricsCollectors = new MetricsCollectorsImpl(registry).withSnakeCaseNaming();
     }
 
     @After
@@ -51,7 +51,7 @@ public class MetricsCollectorsTest {
         void testMeter();
 
         @Meter
-        void testMeter(long meter);
+        void testMetering(long meter);
 
         @Histo // not a counter
         void testLength(long milliseconds);
@@ -126,6 +126,13 @@ public class MetricsCollectorsTest {
         mtm().testMeter();
 
         assertMeterValue("test-meter", 1, 1.0);
+    }
+
+    @Test
+    public void testMetering() {
+        mtm().testMetering(3);
+
+        assertMeterValue("test-meter", 1, 3.0);
     }
 
     @Test(expected = IllegalArgumentException.class)
