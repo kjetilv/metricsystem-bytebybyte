@@ -17,28 +17,28 @@ import net.bytebuddy.implementation.MethodCall;
 
 final class MetricsBuddy {
 
-    static Class<? extends MetricsSupport> generateSubclass(
-            Class<?> meteringInterface,
+    static Class<? extends MetricsCollector> generateSubclass(
+            Class<?> type,
             MetricNameStrategy metricNameStrategy) {
-        DynamicType.Builder<MetricsSupport> builder =
-                withAddedMethods(meteringInterface, metricNameStrategy, basicBuilder(meteringInterface));
+        DynamicType.Builder<MetricsCollector> builder =
+                withAddedMethods(type, metricNameStrategy, basicBuilder(type));
         return loaded(builder);
     }
 
-    private static DynamicType.Builder<MetricsSupport> basicBuilder(Class<?> intf) {
-        return new ByteBuddy().subclass(MetricsSupport.class).implement(intf);
+    private static DynamicType.Builder<MetricsCollector> basicBuilder(Class<?> type) {
+        return new ByteBuddy().subclass(MetricsCollector.class).implement(type);
     }
 
-    private static <T extends MetricsSupport> DynamicType.Builder<T> withAddedMethods(
-            Class<?> meterIntf,
+    private static <T extends MetricsCollector> DynamicType.Builder<T> withAddedMethods(
+            Class<?> type,
             MetricNameStrategy metricNameStrategy,
             DynamicType.Builder<T> base) {
-        return Stream.of(meterIntf.getDeclaredMethods()).reduce(base,
+        return Stream.of(type.getDeclaredMethods()).reduce(base,
                 (builder, method) -> createMethod(builder, method, metricNameStrategy),
                 MetricsBuddy::failIfCombined);
     }
 
-    private static <T extends MetricsSupport> DynamicType.Builder<T> createMethod(
+    private static <T extends MetricsCollector> DynamicType.Builder<T> createMethod(
             DynamicType.Builder<T> builder,
             Method method,
             MetricNameStrategy metricNameStrategy) {
@@ -68,7 +68,7 @@ final class MetricsBuddy {
             Histo.class,
             Time.class));
 
-    private static Class<? extends MetricsSupport> loaded(DynamicType.Builder<MetricsSupport> baseBuilder) {
+    private static Class<? extends MetricsCollector> loaded(DynamicType.Builder<MetricsCollector> baseBuilder) {
         return baseBuilder.make()
                 .load(Thread.currentThread().getContextClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
@@ -93,7 +93,7 @@ final class MetricsBuddy {
                 .filter(MetricsBuddy::isMetricAnnotation)
                 .findFirst()
                 .map(Object::getClass)
-                .orElse(method.getReturnType() == Metrics.Timer.class
+                .orElse(method.getReturnType() == MetricsCollectors.Timer.class
                         ? Time.class
                         : method.getDeclaringClass().getAnnotation(DefaultMetric.class).value());
     }
@@ -104,7 +104,7 @@ final class MetricsBuddy {
 
     private static Method resolveBaseMethod(String name, Class<?>... args) {
         try {
-            return MetricsSupport.class.getDeclaredMethod(name, args);
+            return MetricsCollector.class.getDeclaredMethod(name, args);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to get " + name + "(" + Arrays.toString(args) + ")", e);
         }
@@ -127,7 +127,7 @@ final class MetricsBuddy {
 
     private static final Map<Class<? extends Annotation>, Collection<Method>> baseMethods = baseMethods();
 
-    private static <T extends MetricsSupport> DynamicType.Builder<T> failIfCombined(
+    private static <T extends MetricsCollector> DynamicType.Builder<T> failIfCombined(
             DynamicType.Builder<T> b1,
             DynamicType.Builder<T> b2) {
         throw new IllegalStateException("Should not get here: " + b1 + " + " + b2);

@@ -57,8 +57,8 @@ final class Validation {
     }
 
     private static Void validateTimer(Method method) {
-        if (method.getReturnType() != Metrics.Timer.class) {
-            throw new IllegalArgumentException("Timer method should return " + Metrics.Timer.class + ": " + method);
+        if (method.getReturnType() != MetricsCollectors.Timer.class) {
+            throw new IllegalArgumentException("Timer method should return " + MetricsCollectors.Timer.class + ": " + method);
         }
         if (method.getParameterCount() > 0) {
             throw new IllegalArgumentException("Timer method should take no parameters: " + method);
@@ -73,7 +73,7 @@ final class Validation {
                         .filter(annotation -> annotation != null)
                         .collect(Collectors.toList());
         if (annotations.isEmpty()) {
-            if (method.getReturnType() == Metrics.Timer.class) {
+            if (method.getReturnType() == MetricsCollectors.Timer.class) {
                 return Time.class;
             }
             DefaultMetric defaultMetric = method.getDeclaringClass().getAnnotation(DefaultMetric.class);

@@ -5,10 +5,10 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.concurrent.Callable;
 
 @SuppressWarnings({"InstanceVariableMayNotBeInitialized", "unused"})
-public abstract class MetricsSupport extends ManagedBase {
+public abstract class MetricsCollector extends ManagedBase {
 
     protected <T> T time(String name, Callable<T> callable) {
-        Metrics.Timer timer = timer(name);
+        MetricsCollectors.Timer timer = timer(name);
         try {
             return callable.call();
         } catch (Exception e) {
@@ -18,7 +18,7 @@ public abstract class MetricsSupport extends ManagedBase {
         }
     }
 
-    protected Metrics.Timer timer(String name) {
+    protected MetricsCollectors.Timer timer(String name) {
         return getMetricRegistry().timer(MetricRegistry.name(getMeteredClass(), name)).time()::stop;
     }
 

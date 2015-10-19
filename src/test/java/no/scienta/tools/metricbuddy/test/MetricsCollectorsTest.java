@@ -13,24 +13,27 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MetricsTest {
+public class MetricsCollectorsTest {
 
     private MetricRegistry registry;
 
-    private Metrics metrics;
+    private MetricsCollectors metricsCollectors;
 
     @Before
     public void setup() {
         registry = new MetricRegistry();
-        metrics = new Metrics(registry).withSnakeCaseNaming();
+        metricsCollectors = new MetricsCollectors(registry).withSnakeCaseNaming();
     }
 
     @After
     public void teardown() {
         registry = null;
-        metrics = null;
+        metricsCollectors = null;
     }
 
+    /**
+     * A sample interface that can be used to trigger metrics.
+     */
     @DefaultMetric(Inc.class)
     public interface MetricsTestMetrics {
 
@@ -56,13 +59,13 @@ public class MetricsTest {
         @Histo @OverrideName("bigness")
         void testSize(long milliseconds);
 
-        Metrics.Timer testTimer();
+        MetricsCollectors.Timer testTimer();
     }
 
     @Test
     public void testIdentity() {
         assertSame("Metrics instance should be the same for the same class", mtm(), mtm());
-        MetricsTestMetrics byClass = metrics.create(MetricsTest.class, MetricsTestMetrics.class);
+        MetricsTestMetrics byClass = metricsCollectors.metricsCollector(MetricsCollectorsTest.class, MetricsTestMetrics.class);
         assertSame("Metrics instance should be the same for the same class", byClass, mtm());
     }
 
@@ -111,7 +114,7 @@ public class MetricsTest {
 
     @Test
     public void testTimer() throws InterruptedException {
-        Metrics.Timer timer = mtm().testTimer();
+        MetricsCollectors.Timer timer = mtm().testTimer();
         Thread.sleep(100);
         timer.done();
 
@@ -127,7 +130,7 @@ public class MetricsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void badTimerReturnType() {
-        fail(metrics.create(this, BadMetrics1.class) + " should not exist!");
+        fail(metricsCollectors.metricsCollector(this, BadMetrics1.class) + " should not exist!");
     }
 
     @SuppressWarnings("unused")
@@ -138,7 +141,7 @@ public class MetricsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void badTimerArgumentList() {
-        fail(metrics.create(this, BadMetrics2.class) + " should not exist!");
+        fail(metricsCollectors.metricsCollector(this, BadMetrics2.class) + " should not exist!");
     }
 
     @SuppressWarnings("unused")
@@ -149,7 +152,7 @@ public class MetricsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void badCounterReturnType() {
-        fail(metrics.create(this, BadMetrics3.class) + " should not exist!");
+        fail(metricsCollectors.metricsCollector(this, BadMetrics3.class) + " should not exist!");
     }
 
     @SuppressWarnings("unused")
@@ -160,7 +163,7 @@ public class MetricsTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void badHistoReturnType() {
-        fail(metrics.create(this, BadMetrics4.class) + " should not exist!");
+        fail(metricsCollectors.metricsCollector(this, BadMetrics4.class) + " should not exist!");
     }
 
     @SuppressWarnings("unused")
@@ -170,7 +173,7 @@ public class MetricsTest {
     }
 
     private MetricsTestMetrics mtm() {
-        return metrics.create(this, MetricsTestMetrics.class);
+        return metricsCollectors.metricsCollector(this, MetricsTestMetrics.class);
     }
 
     private void assertHistogramValue(String name, long count, double mean) {
@@ -205,6 +208,6 @@ public class MetricsTest {
     }
 
     private static <T> T get(SortedMap<String, T> counters, String counter) {
-        return counters.get(MetricRegistry.name(MetricsTest.class, counter));
+        return counters.get(MetricRegistry.name(MetricsCollectorsTest.class, counter));
     }
 }
