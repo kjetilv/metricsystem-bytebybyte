@@ -5,7 +5,8 @@ import com.codahale.metrics.MetricRegistry;
 import java.util.concurrent.Callable;
 
 /**
- * Superclass for metrics collectors.
+ * Superclass for metrics collectors.  A {@link MetricsCollectors} instance creates instances of this class, either
+ * from subclasses or annotated interfaces.
  */
 public abstract class MetricsCollector extends ManagedBase {
 

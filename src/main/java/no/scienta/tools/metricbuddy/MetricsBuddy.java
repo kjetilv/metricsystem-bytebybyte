@@ -20,13 +20,9 @@ final class MetricsBuddy {
     static Class<? extends MetricsCollector> generateSubclass(
             Class<?> type,
             MetricsCollectors.MetricNameStrategy metricNameStrategy) {
-        DynamicType.Builder<MetricsCollector> builder =
-                withAddedMethods(type, metricNameStrategy, basicBuilder(type));
+        DynamicType.Builder<MetricsCollector> base = new ByteBuddy().subclass(MetricsCollector.class).implement(type);
+        DynamicType.Builder<MetricsCollector> builder = withAddedMethods(type, metricNameStrategy, base);
         return loaded(builder);
-    }
-
-    private static DynamicType.Builder<MetricsCollector> basicBuilder(Class<?> type) {
-        return new ByteBuddy().subclass(MetricsCollector.class).implement(type);
     }
 
     private static <T extends MetricsCollector> DynamicType.Builder<T> withAddedMethods(
@@ -52,15 +48,15 @@ final class MetricsBuddy {
                 .intercept(argumentMethodCall).modifiers(Visibility.PUBLIC);
     }
 
-    private static int[] indices(Method method) {
-        return IntStream.range(0, method.getParameterCount()).toArray();
-    }
-
     private static String metricName(MetricsCollectors.MetricNameStrategy metricNameStrategy, Method method) {
         OverrideName overrideName = method.getAnnotation(OverrideName.class);
         return overrideName != null ? overrideName.value()
                 : metricNameStrategy != null ? metricNameStrategy.metricName(method)
                 : method.getName();
+    }
+
+    private static int[] indices(Method method) {
+        return IntStream.range(0, method.getParameterCount()).toArray();
     }
 
     private static final Collection<Class<? extends Annotation>> annotations = new HashSet<>(Arrays.asList(
