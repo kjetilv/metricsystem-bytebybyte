@@ -76,9 +76,10 @@ final class Validation {
             if (method.getReturnType() == MetricsCollectors.Timer.class) {
                 return Time.class;
             }
-            DefaultMetric defaultMetric = method.getDeclaringClass().getAnnotation(DefaultMetric.class);
+            Class<? extends Annotation> defaultMetric =
+                    method.getDeclaringClass().getAnnotation(MetricsCollector.class).defaultMetric();
             if (defaultMetric != null) {
-                return defaultMetric.value();
+                return defaultMetric;
             }
         }
         if (annotations.size() > 1) {

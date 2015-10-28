@@ -19,7 +19,16 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     mavenCentral()
     jcenter()
-}
+
+
+//jar {
+//    manifest {
+//        attributes(
+//                "Premain-Class": "no.scienta.tools.metricbuddy.MetricAgent",
+//                "Implementation-Title": "MetricBuddy",
+//                "Implementation-Version": version)
+//    }
+//}
 
 // In this section you declare the dependencies for your production and MetricsTest code
 dependencies {

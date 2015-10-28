@@ -15,15 +15,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class MetricsCollectorsImpl implements MetricsCollectors {
 
+    private static MetricsCollectorsImpl INSTANCE = new MetricsCollectorsImpl();
+
+    public static MetricsCollectors defaultInstance() {
+        return INSTANCE;
+    }
+
     private final MetricRegistry metricRegistry;
 
     private final MetricNameStrategy metricNameStrategy;
 
     private final boolean registeredInJmx;
 
-    private final Map<Class<?>, MetricsCollector> meters = new ConcurrentHashMap<>();
+    private final Map<Class<?>, AbstractMetricsCollector> meters = new ConcurrentHashMap<>();
 
-    private final Map<Class<?>, Class<? extends MetricsCollector>> generatedMeterTypes = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Class<? extends AbstractMetricsCollector>> generatedMeterTypes = new ConcurrentHashMap<>();
 
     public MetricsCollectorsImpl() {
         this(null);
@@ -75,7 +81,7 @@ public final class MetricsCollectorsImpl implements MetricsCollectors {
     }
 
     private <T> T getOrCreateInstance(Class<?> metricSourceType, Class<T> metricsCollectorType) {
-        MetricsCollector metricsCollector = meters.computeIfAbsent(metricSourceType, type -> {
+        AbstractMetricsCollector metricsCollector = meters.computeIfAbsent(metricSourceType, type -> {
             if (metricsCollectorType == null) {
                 throw new IllegalArgumentException("No metrics class registered for " + metricSourceType);
             }
@@ -84,23 +90,23 @@ public final class MetricsCollectorsImpl implements MetricsCollectors {
         return validated(metricSourceType, metricsCollectorType, metricsCollector);
     }
 
-    private <T> MetricsCollector newMetrics(Class<?> metricSourceType, Class<T> metricsCollectorType) {
-        Class<? extends MetricsCollector> collectorClass = metricsCollectorClass(metricsCollectorType);
+    private <T> AbstractMetricsCollector newMetrics(Class<?> metricSourceType, Class<T> metricsCollectorType) {
+        Class<? extends AbstractMetricsCollector> collectorClass = metricsCollectorClass(metricsCollectorType);
         Constructor<?> constructor = callableConstructor(collectorClass);
         Object instance = newCollectorInstance(constructor);
         return managedMetricsCollector(metricSourceType, instance);
     }
 
-    private <T> Class<? extends MetricsCollector> metricsCollectorClass(Class<T> type) {
+    private <T> Class<? extends AbstractMetricsCollector> metricsCollectorClass(Class<T> type) {
         if (type.isInterface()) {
             return generatedMeterTypes.computeIfAbsent(type, intf ->
                     MetricsBuddy.generateSubclass(Validation.vetted(intf), metricNameStrategy));
         }
-        if (MetricsCollector.class.isAssignableFrom(type)) {
-            return type.asSubclass(MetricsCollector.class);
+        if (AbstractMetricsCollector.class.isAssignableFrom(type)) {
+            return type.asSubclass(AbstractMetricsCollector.class);
         }
         throw new IllegalArgumentException
-                ("Required interface type or subclass of " + MetricsCollector.class + ", got: " + type);
+                ("Required interface type or subclass of " + AbstractMetricsCollector.class + ", got: " + type);
     }
 
     private Object newCollectorInstance(Constructor<?> constructor) {
@@ -111,7 +117,7 @@ public final class MetricsCollectorsImpl implements MetricsCollectors {
         }
     }
 
-    private Constructor<?> callableConstructor(Class<? extends MetricsCollector> collectorClass) {
+    private Constructor<?> callableConstructor(Class<? extends AbstractMetricsCollector> collectorClass) {
         try {
             for (Constructor<?> constructor : collectorClass.getDeclaredConstructors()) {
                 if (constructor.getParameterCount() == 0) {
@@ -127,13 +133,13 @@ public final class MetricsCollectorsImpl implements MetricsCollectors {
                         Arrays.toString(collectorClass.getDeclaredConstructors()));
     }
 
-    private MetricsCollector managedMetricsCollector(Class<?> metricSourceType, Object metricsCollector) {
-        MetricsCollector meters = MetricsCollector.class.cast(metricsCollector);
+    private AbstractMetricsCollector managedMetricsCollector(Class<?> metricSourceType, Object metricsCollector) {
+        AbstractMetricsCollector meters = AbstractMetricsCollector.class.cast(metricsCollector);
         meters.manage(metricRegistry, metricSourceType);
         return meters;
     }
 
-    private static <T> T validated(Class<?> sourceType, Class<T> meterType, MetricsCollector metricsCollector) {
+    private static <T> T validated(Class<?> sourceType, Class<T> meterType, AbstractMetricsCollector metricsCollector) {
         if (metricsCollector.getMeteredClass() != sourceType) {
             throw new IllegalArgumentException("Metrics class " + metricsCollector.getClass() +
                     " already registered as metering for " + metricsCollector.getMeteredClass() +

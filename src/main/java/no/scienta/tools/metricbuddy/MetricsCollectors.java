@@ -3,7 +3,7 @@ package no.scienta.tools.metricbuddy;
 import java.lang.reflect.Method;
 
 /**
- * The main interface. Produces metrics collectors from subclasses of {@link MetricsCollector}, or from annotated
+ * The main interface. Produces metrics collectors from subclasses of {@link AbstractMetricsCollector}, or from annotated
  * interface types.
  */
 public interface MetricsCollectors {

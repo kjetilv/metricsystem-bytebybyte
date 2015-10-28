@@ -34,7 +34,7 @@ public class MetricsCollectorsTest {
     /**
      * A sample interface that can be used to trigger metrics.
      */
-    @DefaultMetric(Inc.class)
+    @MetricsCollector(defaultMetric = Inc.class)
     public interface MetricsTestMetrics {
 
         void testRun();
@@ -188,7 +188,7 @@ public class MetricsCollectorsTest {
         Histogram h = get(histograms, name);
         assertThat(h, notNullValue());
         assertThat(h.getCount(), is(count));
-        assertEquals(h.getSnapshot().getMean(), mean, 0.01D);
+        assertEquals(h.getSnapshot().getMean(), mean, 0.05D);
     }
 
     private void assertCounterValue(String counter, long value) {

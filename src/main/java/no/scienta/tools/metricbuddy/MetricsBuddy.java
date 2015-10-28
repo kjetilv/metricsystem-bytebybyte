@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.NamingStrategy;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
@@ -17,24 +18,36 @@ import net.bytebuddy.implementation.MethodCall;
 
 final class MetricsBuddy {
 
-    static Class<? extends MetricsCollector> generateSubclass(
-            Class<?> type,
-            MetricsCollectors.MetricNameStrategy metricNameStrategy) {
-        DynamicType.Builder<MetricsCollector> base = new ByteBuddy().subclass(MetricsCollector.class).implement(type);
-        DynamicType.Builder<MetricsCollector> builder = withAddedMethods(type, metricNameStrategy, base);
-        return loaded(builder);
+    static Class<? extends AbstractMetricsCollector> generateSubclass(Class<?> type,
+                                                                      MetricsCollectors.MetricNameStrategy nameStrategy) {
+        return generateSubclass(type, nameStrategy, null);
     }
 
-    private static <T extends MetricsCollector> DynamicType.Builder<T> withAddedMethods(
-            Class<?> type,
-            MetricsCollectors.MetricNameStrategy metricNameStrategy,
-            DynamicType.Builder<T> base) {
+    private static Class<? extends AbstractMetricsCollector> generateSubclass(Class<?> type,
+                                                                              MetricsCollectors.MetricNameStrategy nameStrategy,
+                                                                              ClassLoader classLoader) {
+        DynamicType.Builder<AbstractMetricsCollector> builder = addMethods(
+                new ByteBuddy()
+                        .subclass(AbstractMetricsCollector.class).implement(type)
+                        .name(new NamingStrategy.SuffixingRandom("Metrics")),
+                type,
+                nameStrategy);
+        DynamicType.Unloaded<AbstractMetricsCollector> unloadedClass = builder.make();
+        DynamicType.Loaded<AbstractMetricsCollector> loadedClass = unloadedClass.load(
+                classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader,
+                ClassLoadingStrategy.Default.WRAPPER);
+        return loadedClass.getLoaded();
+    }
+
+    private static <T extends AbstractMetricsCollector> DynamicType.Builder<T> addMethods(
+            DynamicType.Builder<T> base, Class<?> type,
+            MetricsCollectors.MetricNameStrategy metricNameStrategy) {
         return Stream.of(type.getDeclaredMethods()).reduce(base,
                 (builder, method) -> createMethod(builder, method, metricNameStrategy),
                 MetricsBuddy::failIfCombined);
     }
 
-    private static <T extends MetricsCollector> DynamicType.Builder<T> createMethod(
+    private static <T extends AbstractMetricsCollector> DynamicType.Builder<T> createMethod(
             DynamicType.Builder<T> builder,
             Method method,
             MetricsCollectors.MetricNameStrategy metricNameStrategy) {
@@ -65,12 +78,6 @@ final class MetricsBuddy {
             Time.class,
             Meter.class));
 
-    private static Class<? extends MetricsCollector> loaded(DynamicType.Builder<MetricsCollector> baseBuilder) {
-        return baseBuilder.make()
-                .load(Thread.currentThread().getContextClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
-                .getLoaded();
-    }
-
     private static Method baseMethod(Method method) {
         Class<?> annotation = metricAnnotation(method);
         Optional<Method> first = baseMethods.entrySet().stream()
@@ -92,7 +99,17 @@ final class MetricsBuddy {
                 .map(Object::getClass)
                 .orElse(method.getReturnType() == MetricsCollectors.Timer.class
                         ? Time.class
-                        : method.getDeclaringClass().getAnnotation(DefaultMetric.class).value());
+                        : defaultMetric(method));
+    }
+
+    private static Class<? extends Annotation> defaultMetric(Method method) {
+        MetricsCollector annotation = method.getDeclaringClass().getAnnotation(MetricsCollector.class);
+        if (annotation == null) {
+            throw new IllegalArgumentException("No metric annotations on method " + method.getName() +
+                    ", and missing annotation " + MetricsCollector.class + " on " + method.getDeclaringClass() +
+                    ", could not determine metric type, for method: " + method);
+        }
+        return annotation.defaultMetric();
     }
 
     private static boolean isMetricAnnotation(Annotation anno) {
@@ -101,7 +118,7 @@ final class MetricsBuddy {
 
     private static Method resolveBaseMethod(String name, Class<?>... args) {
         try {
-            return MetricsCollector.class.getDeclaredMethod(name, args);
+            return AbstractMetricsCollector.class.getDeclaredMethod(name, args);
         } catch (Exception e) {
             throw new IllegalStateException("Failed to get " + name + "(" + Arrays.toString(args) + ")", e);
         }
@@ -124,7 +141,7 @@ final class MetricsBuddy {
 
     private static final Map<Class<? extends Annotation>, Collection<Method>> baseMethods = baseMethods();
 
-    private static <T extends MetricsCollector> DynamicType.Builder<T> failIfCombined(
+    private static <T extends AbstractMetricsCollector> DynamicType.Builder<T> failIfCombined(
             DynamicType.Builder<T> b1,
             DynamicType.Builder<T> b2) {
         throw new IllegalStateException("Should not get here: " + b1 + " + " + b2);
