@@ -14,7 +14,7 @@ public class AbstractSeparatorNamer implements MetricsCollectors.MetricNameStrat
 
     private final char separator;
 
-    protected AbstractSeparatorNamer(char separator) {
+    AbstractSeparatorNamer(char separator) {
         this.separator = separator;
     }
 
@@ -27,10 +27,9 @@ public class AbstractSeparatorNamer implements MetricsCollectors.MetricNameStrat
         return name.chars()
                 .mapToObj(i -> (char) i)
                 .flatMap(c -> isUpperCase(c)
-                        ? Stream.<Character>of(separator, toLowerCase(c))
+                        ? Stream.of(separator, toLowerCase(c))
                         : Stream.of(c))
-                .reduce(new StringBuilder(),
-                        (sb, c) -> sb.append(c), StringBuilder::append)
+                .reduce(new StringBuilder(), StringBuilder::append, StringBuilder::append)
                 .toString();
     }
 }
