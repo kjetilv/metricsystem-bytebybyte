@@ -1,5 +1,12 @@
 package no.scienta.tools.metricbuddy;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.NamingStrategy;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.implementation.MethodCall;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -9,32 +16,19 @@ import java.util.stream.Stream;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
-import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.NamingStrategy;
-import net.bytebuddy.description.modifier.Visibility;
-import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.MethodCall;
-
 final class MetricsBuddy {
 
     static Class<? extends AbstractMetricsCollector> generateSubclass(Class<?> type,
                                                                       MetricsCollectors.MetricNameStrategy nameStrategy) {
-        return generateSubclass(type, nameStrategy, null);
-    }
-
-    private static Class<? extends AbstractMetricsCollector> generateSubclass(Class<?> type,
-                                                                              MetricsCollectors.MetricNameStrategy nameStrategy,
-                                                                              ClassLoader classLoader) {
         DynamicType.Builder<AbstractMetricsCollector> builder = addMethods(
                 new ByteBuddy()
-                        .subclass(AbstractMetricsCollector.class).implement(type)
-                        .name(new NamingStrategy.SuffixingRandom("Metrics")),
+                        .with(new NamingStrategy.SuffixingRandom("Metrics"))
+                        .subclass(AbstractMetricsCollector.class).implement(type),
                 type,
                 nameStrategy);
         DynamicType.Unloaded<AbstractMetricsCollector> unloadedClass = builder.make();
         DynamicType.Loaded<AbstractMetricsCollector> loadedClass = unloadedClass.load(
-                classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader,
+                Thread.currentThread().getContextClassLoader(),
                 ClassLoadingStrategy.Default.WRAPPER);
         return loadedClass.getLoaded();
     }
@@ -92,14 +86,19 @@ final class MetricsBuddy {
         return first.get();
     }
 
-    private static Class<?> metricAnnotation(Method method) {
+    private static Class<? extends Annotation> metricAnnotation(Method method) {
         return Stream.of(method.getAnnotations())
                 .filter(MetricsBuddy::isMetricAnnotation)
                 .findFirst()
                 .map(Object::getClass)
-                .orElse(method.getReturnType() == MetricsCollectors.Timer.class
-                        ? Time.class
-                        : defaultMetric(method));
+                .<Class<? extends Annotation>>map(type -> type.asSubclass(Annotation.class))
+                .orElseGet(() -> defaultClass(method));
+    }
+
+    private static Class<? extends Annotation> defaultClass(Method method) {
+        return method.getReturnType() != MetricsCollectors.Timer.class
+                ? defaultMetric(method)
+                : Time.class;
     }
 
     private static Class<? extends Annotation> defaultMetric(Method method) {
