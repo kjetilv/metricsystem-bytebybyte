@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import java.lang.reflect.Method;
 
@@ -40,14 +40,14 @@ public interface MetricsCollectors {
      */
     default MetricsCollectors withSnakeCaseNaming() {
         return withNameStrategy(new SnakeCaseNamer());
-    };
+    }
 
     /**
      * @return Metrics collectors with path.naming.
      */
     default MetricsCollectors withPathNaming() {
         return withNameStrategy(new PathNamer());
-    };
+    }
 
     /**
      * @param strategy Naming strategy

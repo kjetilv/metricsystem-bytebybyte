@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
  * Superclass for metrics collectors.  A {@link MetricsCollectors} instance creates instances of this class, either
  * from subclasses or annotated interfaces.
  */
+@SuppressWarnings({"WeakerAccess", "SameParameterValue"})
 public abstract class AbstractMetricsCollector extends ManagedBase {
 
     protected <T> T time(String name, Callable<T> callable) {

@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy.test;
+package no.scienta.alchemy.metricbuddy.test;
 
 import java.util.SortedMap;
 
@@ -7,12 +7,13 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.junit.Assert.*;
 
 import com.codahale.metrics.*;
-import no.scienta.tools.metricbuddy.*;
-import no.scienta.tools.metricbuddy.Meter;
+import no.scienta.alchemy.metricbuddy.*;
+import no.scienta.alchemy.metricbuddy.Meter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+@SuppressWarnings("SameParameterValue")
 public class MetricsCollectorsTest {
 
     private MetricRegistry registry;
@@ -34,6 +35,7 @@ public class MetricsCollectorsTest {
     /**
      * A sample interface that can be used to trigger metrics.
      */
+    @SuppressWarnings("SameParameterValue")
     @MetricsCollector(defaultMetric = Inc.class)
     public interface MetricsTestMetrics {
 

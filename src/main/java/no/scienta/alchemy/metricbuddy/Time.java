@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Inc {
+public @interface Time {
 
 }

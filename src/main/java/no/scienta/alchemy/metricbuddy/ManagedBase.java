@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -13,11 +13,11 @@ abstract class ManagedBase {
         this.meteredClass = meteredClass;
     }
 
-    protected Class<?> getMeteredClass() {
+    Class<?> getMeteredClass() {
         return meteredClass;
     }
 
-    protected MetricRegistry getMetricRegistry() {
+    MetricRegistry getMetricRegistry() {
         return metricRegistry;
     }
 }

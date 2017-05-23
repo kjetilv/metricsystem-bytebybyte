@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.NamingStrategy;

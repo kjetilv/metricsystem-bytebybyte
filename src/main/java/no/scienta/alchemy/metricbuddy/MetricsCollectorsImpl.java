@@ -1,4 +1,4 @@
-package no.scienta.tools.metricbuddy;
+package no.scienta.alchemy.metricbuddy;
 
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.MetricRegistry;
@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * The main class.
  */
+@SuppressWarnings("WeakerAccess")
 public final class MetricsCollectorsImpl implements MetricsCollectors {
 
     private static MetricsCollectorsImpl INSTANCE = new MetricsCollectorsImpl();
